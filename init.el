@@ -85,7 +85,8 @@
       initial-scratch-message nil)
 
 (setq-default indent-tabs-mode nil
-              tab-width 4)
+              tab-width 4
+              truncate-lines t)
 
 (savehist-mode 1)
 (recentf-mode 1)
@@ -94,10 +95,11 @@
 (electric-pair-mode 1)
 (show-paren-mode 1)
 (which-key-mode 1)
+(global-visual-line-mode 1)
 
 (keymap-global-unset "C-z")
-(keymap-global-unset "C-x C-c")
-(keymap-global-set "C-x C-c C-c" #'save-buffers-kill-emacs)
+;; macOS-style Cmd-backspace to kill whole line
+(keymap-global-set "s-DEL" #'kill-whole-line)
 
 ;;; Pointer/click support
 (my-emacs-configure
@@ -152,8 +154,7 @@
         projectile-completion-system 'default
         projectile-switch-project-action #'projectile-dired)
   (define-key global-map (kbd "C-c p") projectile-command-map)
-  ;; On macOS, Command is usually Emacs' Super modifier.
-  (keymap-global-set "s-t" projectile-command-map))
+  )
 
 (elpaca treemacs
   (setq treemacs-persist-file (expand-file-name "treemacs-persist" my-emacs-state-directory)
