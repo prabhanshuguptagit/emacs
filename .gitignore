@@ -12,6 +12,8 @@
 # Emacs state/cache files left over from older/default locations
 /eln-cache/
 /elpaca/
+/elpa/
+/tree-sitter/
 /auto-save/
 /custom.el
 /history
