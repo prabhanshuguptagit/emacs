@@ -1,1 +1,1 @@
-Working man emacs config
+## Working man's emacs config

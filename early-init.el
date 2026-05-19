@@ -25,7 +25,8 @@
       frame-inhibit-implied-resize t
       ;; Match the `misterioso' theme early to avoid a white startup flash.
       default-frame-alist '((background-color . "#2d3743")
-                            (foreground-color . "#e1e1e0"))
+                            (foreground-color . "#e1e1e0")
+                            (fullscreen . maximized))
       initial-frame-alist default-frame-alist
       inhibit-splash-screen t
       inhibit-startup-screen t

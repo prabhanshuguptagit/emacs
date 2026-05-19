@@ -155,6 +155,8 @@
 
 (elpaca magit
   (keymap-global-set "C-c g" #'magit-status)
+  (keymap-global-set "C-c c" #'magit-commit-create)
+  (keymap-global-set "C-c P" #'magit-push-current-to-upstream)
   (with-eval-after-load 'magit
     (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)))
 
@@ -204,7 +206,7 @@
   (add-to-list 'default-frame-alist '(font . "Be Vietnam Pro-16"))
   (set-face-attribute 'default nil :family "Be Vietnam Pro" :height 160)
   ;; Use an actual monospace font for fixed-pitch contexts (code, dired tables)
-  (set-face-attribute 'fixed-pitch nil :family "Menlo" :height 140)
+  (set-face-attribute 'fixed-pitch nil :family "Menlo" :height 160)
   ;; Force Dired to use monospace so columns align properly
   (add-hook 'dired-mode-hook
             (lambda ()
