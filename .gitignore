@@ -5,8 +5,11 @@
 /auto-save-list/
 /tramp
 
-# Emacs state/cache files left over from older/default locations
+# Emacs state/cache files
 /.cache/
+/.state/
+
+# Emacs state/cache files left over from older/default locations
 /eln-cache/
 /elpaca/
 /auto-save/

@@ -3,11 +3,11 @@
 ;;; Keep generated files out of `user-emacs-directory'.
 
 (defconst my-emacs-cache-directory
-  (expand-file-name "emacs/" (or (getenv "XDG_CACHE_HOME") "~/.cache/"))
+  (expand-file-name ".cache/" user-emacs-directory)
   "Directory for disposable Emacs cache/build files.")
 
 (defconst my-emacs-state-directory
-  (expand-file-name "emacs/" (or (getenv "XDG_STATE_HOME") "~/.local/state/"))
+  (expand-file-name ".state/" user-emacs-directory)
   "Directory for persistent Emacs state files.")
 
 (dolist (directory (list my-emacs-cache-directory
