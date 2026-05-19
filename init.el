@@ -198,9 +198,21 @@
 
 ;;; Appearance
 (my-emacs-configure
-  ;; A comfortable size above Emacs' usual 10pt default.
-  (set-face-attribute 'default nil :height 150)
-  (load-theme 'misterioso :no-confirm))
+  ;; Theme first
+  (load-theme 'misterioso :no-confirm)
+  ;; Font: Be Vietnam Pro at 160 (16pt)
+  (add-to-list 'default-frame-alist '(font . "Be Vietnam Pro-16"))
+  (set-face-attribute 'default nil :family "Be Vietnam Pro" :height 160)
+  ;; Use an actual monospace font for fixed-pitch contexts (code, dired tables)
+  (set-face-attribute 'fixed-pitch nil :family "Menlo" :height 140)
+  ;; Force Dired to use monospace so columns align properly
+  (add-hook 'dired-mode-hook
+            (lambda ()
+              (setq buffer-face-mode-face 'fixed-pitch)
+              (buffer-face-mode 1)))
+  ;; Apply to current frame if already exists
+  (when (display-graphic-p)
+    (set-frame-font "Be Vietnam Pro-16" nil t)))
 
 (provide 'init)
 ;;; init.el ends here
