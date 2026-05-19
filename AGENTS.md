@@ -138,6 +138,18 @@ Warning (emacs): elpaca loaded before Elpaca activation
 
 We are relying on bootstrap-loading Elpaca instead of asking Elpaca to manage itself during startup.
 
+## Agent convention: Installing packages
+
+When the user asks to "install" a package (e.g., "can you install markdown-mode?"), **do not** just tell them to run `M-x package-install`. Instead, **add the package to `init.el`** using the Elpaca form:
+
+```elisp
+(elpaca package-name)
+```
+
+Place it in an appropriate section (with related packages, or in a "Packages" section). This ensures the installation is **persistent** across restarts.
+
+If the user wants to try something temporarily first, they can still use `M-x package-install` (which works via Elpaca's compatibility shim), but the agent's default action should be adding to `init.el`.
+
 ## Requested package config
 
 ### Magit

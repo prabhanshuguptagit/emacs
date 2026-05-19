@@ -105,6 +105,23 @@
 (keymap-global-set "s-<up>" #'beginning-of-buffer)
 (keymap-global-set "s-<down>" #'end-of-buffer)
 
+;; Window navigation with Cmd-[ and Cmd-]
+(keymap-global-set "s-]" (lambda () (interactive) (other-window 1)))
+(keymap-global-set "s-[" (lambda () (interactive) (other-window -1)))
+
+;; Quick theme preview - disable current theme, load new one without prompts
+(defun my-preview-theme (theme)
+  "Disable current theme and load THEME without confirmation prompts."
+  (interactive
+   (list (intern (completing-read "Theme: "
+                                   (mapcar #'symbol-name
+                                           (custom-available-themes))))))
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme theme :no-confirm)
+  (message "Loaded theme: %s" theme))
+
+(keymap-global-set "C-c w" #'my-preview-theme)
+
 (defun my-kill-whole-line-or-previous ()
   "Kill the current whole line.  If already on an empty line, move up first."
   (interactive)
@@ -169,7 +186,9 @@
   (setq projectile-known-projects-file (expand-file-name "projectile-bookmarks.eld" my-emacs-state-directory)
         projectile-project-search-path '("~")
         projectile-completion-system 'default
-        projectile-switch-project-action #'projectile-dired)
+        projectile-switch-project-action #'projectile-dired
+        ;; Performance: don't index when opening files, cache aggressively
+)
   (keymap-global-set "C-c p" projectile-command-map)
   ;; macOS Cmd+P for "Quick Open" style file finding
   (keymap-global-set "s-p" #'projectile-find-file))
@@ -198,6 +217,11 @@
 (elpaca treemacs-projectile
   (with-eval-after-load 'treemacs
     (require 'treemacs-projectile)))
+
+(elpaca base16-theme
+  (load-theme 'base16-materia :no-confirm)
+  ;; Darker selection highlight for better visibility
+  (set-face-attribute 'icomplete-selected-match nil :background "#37474F" :weight 'bold))
 
 ;;; Tree-sitter for modern syntax highlighting
 ;; Tell Emacs where grammars are installed
@@ -232,8 +256,6 @@
   ;; macOS transparent title bar
   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
   (add-to-list 'default-frame-alist '(ns-appearance . dark))
-  ;; Theme first
-  (load-theme 'misterioso :no-confirm)
   ;; Font: Be Vietnam Pro at 160 (16pt)
   (add-to-list 'default-frame-alist '(font . "Be Vietnam Pro-16"))
   (set-face-attribute 'default nil :family "Be Vietnam Pro" :height 160)
