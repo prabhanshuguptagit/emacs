@@ -200,6 +200,9 @@
 
 ;;; Appearance
 (my-emacs-configure
+  ;; macOS transparent title bar
+  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark))
   ;; Theme first
   (load-theme 'misterioso :no-confirm)
   ;; Font: Be Vietnam Pro at 160 (16pt)
