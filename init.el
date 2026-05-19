@@ -98,8 +98,19 @@
 (global-visual-line-mode 1)
 
 (keymap-global-unset "C-z")
-;; macOS-style Cmd-backspace to kill whole line
-(keymap-global-set "s-DEL" #'kill-whole-line)
+;; macOS-style: Cmd-backspace kills line, C-backspace kills word
+;; Note: angle brackets required for non-character keys
+
+(defun my-kill-whole-line-or-previous ()
+  "Kill the current whole line.  If already on an empty line, move up first."
+  (interactive)
+  (if (looking-at-p "^[[:space:]]*$")
+      (when (= (forward-line -1) 0)
+        (kill-whole-line))
+    (kill-whole-line)))
+
+(keymap-global-set "s-<backspace>" #'my-kill-whole-line-or-previous)
+(keymap-global-set "C-<backspace>" #'backward-kill-word)
 
 ;;; Pointer/click support
 (my-emacs-configure
