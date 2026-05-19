@@ -184,6 +184,18 @@
   (with-eval-after-load 'treemacs
     (require 'treemacs-projectile)))
 
+;;; Ediff (built-in diff merge tool)
+(my-emacs-configure
+  ;; Set up window behavior before ediff loads
+  (setq ediff-split-window-function #'split-window-horizontally
+        ediff-window-setup-function #'ediff-setup-windows-plain)
+  ;; Configure after ediff loads
+  (with-eval-after-load 'ediff
+    (setq ediff-keep-variants nil
+          ediff-make-buffers-readonly-at-startup nil
+          ediff-merge-revisions-with-ancestor t
+          ediff-show-clashes-only t)))
+
 ;;; Appearance
 (my-emacs-configure
   ;; A comfortable size above Emacs' usual 10pt default.
