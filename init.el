@@ -6,7 +6,18 @@
 ;; This is the standard bootstrap.  It clones Elpaca on first startup,
 ;; then uses it for package installation/update/builds.
 (defvar elpaca-installer-version 0.12)
-(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar my-emacs-cache-directory
+  (expand-file-name "emacs/" (or (getenv "XDG_CACHE_HOME") "~/.cache/"))
+  "Directory for disposable Emacs cache/build files.")
+
+(defvar my-emacs-state-directory
+  (expand-file-name "emacs/" (or (getenv "XDG_STATE_HOME") "~/.local/state/"))
+  "Directory for persistent Emacs state files.")
+
+(dolist (directory (list my-emacs-cache-directory my-emacs-state-directory))
+  (make-directory directory t))
+
+(defvar elpaca-directory (expand-file-name "elpaca/" my-emacs-cache-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
 (defvar elpaca-order
@@ -60,13 +71,16 @@
       (message "Configuration error near `%S': %S" (car ',body) err))))
 
 ;; Keep generated Custom settings out of init.el.
-(setq custom-file (locate-user-emacs-file "custom.el"))
+(setq custom-file (expand-file-name "custom.el" my-emacs-state-directory))
 (load custom-file :no-error :no-message)
 
 ;; Sane defaults.
 (setq make-backup-files nil
       create-lockfiles nil
       backup-inhibited nil
+      recentf-save-file (expand-file-name "recentf" my-emacs-state-directory)
+      savehist-file (expand-file-name "savehist" my-emacs-state-directory)
+      save-place-file (expand-file-name "saveplace" my-emacs-state-directory)
       initial-buffer-choice t
       initial-scratch-message nil)
 
@@ -133,7 +147,8 @@
 
 (elpaca projectile
   (projectile-mode 1)
-  (setq projectile-project-search-path '("~")
+  (setq projectile-known-projects-file (expand-file-name "projectile-bookmarks.eld" my-emacs-state-directory)
+        projectile-project-search-path '("~")
         projectile-completion-system 'default
         projectile-switch-project-action #'projectile-dired)
   (define-key global-map (kbd "C-c p") projectile-command-map)
@@ -141,7 +156,8 @@
   (keymap-global-set "s-t" projectile-command-map))
 
 (elpaca treemacs
-  (setq treemacs-width 32
+  (setq treemacs-persist-file (expand-file-name "treemacs-persist" my-emacs-state-directory)
+        treemacs-width 32
         treemacs-follow-after-init t
         treemacs-is-never-other-window t
         treemacs-project-follow-cleanup t)

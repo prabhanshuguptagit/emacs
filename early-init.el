@@ -1,6 +1,27 @@
 ;;; early-init.el --- Early startup tweaks -*- lexical-binding: t; -*-
 
-(setq frame-resize-pixelwise t
+;;; Keep generated files out of `user-emacs-directory'.
+
+(defconst my-emacs-cache-directory
+  (expand-file-name "emacs/" (or (getenv "XDG_CACHE_HOME") "~/.cache/"))
+  "Directory for disposable Emacs cache/build files.")
+
+(defconst my-emacs-state-directory
+  (expand-file-name "emacs/" (or (getenv "XDG_STATE_HOME") "~/.local/state/"))
+  "Directory for persistent Emacs state files.")
+
+(dolist (directory (list my-emacs-cache-directory
+                         my-emacs-state-directory
+                         (expand-file-name "auto-save/" my-emacs-cache-directory)
+                         (expand-file-name "auto-save-list/" my-emacs-cache-directory)))
+  (make-directory directory t))
+
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache (expand-file-name "eln-cache/" my-emacs-cache-directory)))
+
+(setq auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" my-emacs-cache-directory)
+      auto-save-file-name-transforms `((".*" ,(expand-file-name "auto-save/" my-emacs-cache-directory) t))
+      frame-resize-pixelwise t
       frame-inhibit-implied-resize t
       ;; Match the `misterioso' theme early to avoid a white startup flash.
       default-frame-alist '((background-color . "#2d3743")
