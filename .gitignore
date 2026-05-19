@@ -1,0 +1,21 @@
+# Emacs generated files
+*~
+\#*\#
+/.#*
+/auto-save-list/
+/tramp
+
+# Emacs state/cache files
+/.cache/
+/eln-cache/
+/elpaca/
+/history
+/recentf
+/savehist
+/saveplace
+/projectile-bookmarks.eld
+/cursory-latest-state.eld
+/org-clock-save.el
+
+# OS files
+.DS_Store
