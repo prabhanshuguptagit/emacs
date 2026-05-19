@@ -221,7 +221,17 @@
 (elpaca base16-theme
   (load-theme 'base16-materia :no-confirm)
   ;; Darker selection highlight for better visibility
-  (set-face-attribute 'icomplete-selected-match nil :background "#37474F" :weight 'bold))
+  (set-face-attribute 'icomplete-selected-match nil :background "#37474F" :weight 'bold)
+  ;; Make active modeline more prominent - brighter background, subtle box
+  (set-face-attribute 'mode-line nil
+                      :background "#4C566A"
+                      :foreground "#E5E9F0"
+                      :box '(:line-width 1 :color "#5E81AC"))
+  ;; Inactive modeline more subdued
+  (set-face-attribute 'mode-line-inactive nil
+                      :background "#2E3440"
+                      :foreground "#70788A"
+                      :box '(:line-width 1 :color "#3B4252")))
 
 ;;; Tree-sitter for modern syntax highlighting
 ;; Tell Emacs where grammars are installed
@@ -233,6 +243,25 @@
   ;; Auto-use Tree-sitter modes when grammars exist, fallback otherwise
   (setq treesit-auto-install 'prompt) ; ask before auto-installing grammars
   (global-treesit-auto-mode 1))
+
+;; pi-coding-agent - Emacs frontend for the pi coding agent
+;; Add nvm's pi location to PATH (GUI Emacs doesn't inherit shell PATH)
+(add-to-list 'exec-path "/Users/prabhanshu/.nvm/versions/node/v25.5.0/bin")
+(setenv "PATH" (concat "/Users/prabhanshu/.nvm/versions/node/v25.5.0/bin:" (getenv "PATH")))
+
+;; Inherit shell environment variables (API keys from zshrc)
+;; Deferred to avoid slowing startup - runs after init is complete
+(elpaca exec-path-from-shell
+  (run-with-idle-timer 0.5 nil (lambda ()
+                                 (exec-path-from-shell-copy-env "FIREWORKS_API_KEY"))))
+
+(elpaca pi-coding-agent
+  ;; Requires the `pi` CLI to be installed:
+  ;; npm install -g @mariozechner/pi-coding-agent
+  ;; M-x pi-coding-agent to start a session
+  (with-eval-after-load 'pi-coding-agent
+    ;; Alias 'pi to 'pi-coding-agent for quick access
+    (defalias 'pi 'pi-coding-agent)))
 
 ;; Markdown mode (no built-in markdown-ts-mode yet, use traditional mode)
 (elpaca markdown-mode
