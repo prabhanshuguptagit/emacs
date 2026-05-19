@@ -99,7 +99,11 @@
 
 (keymap-global-unset "C-z")
 ;; macOS-style: Cmd-backspace kills line, C-backspace kills word
+;; Cmd-up/down goes to start/end of file
 ;; Note: angle brackets required for non-character keys
+
+(keymap-global-set "s-<up>" #'beginning-of-buffer)
+(keymap-global-set "s-<down>" #'end-of-buffer)
 
 (defun my-kill-whole-line-or-previous ()
   "Kill the current whole line.  If already on an empty line, move up first."
@@ -166,25 +170,50 @@
         projectile-project-search-path '("~")
         projectile-completion-system 'default
         projectile-switch-project-action #'projectile-dired)
-  (define-key global-map (kbd "C-c p") projectile-command-map)
-  )
+  (keymap-global-set "C-c p" projectile-command-map)
+  ;; macOS Cmd+P for "Quick Open" style file finding
+  (keymap-global-set "s-p" #'projectile-find-file))
 
 (elpaca treemacs
   (setq treemacs-persist-file (expand-file-name "treemacs-persist" my-emacs-state-directory)
         treemacs-width 32
+        treemacs-position 'left
         treemacs-follow-after-init t
         treemacs-is-never-other-window t
-        treemacs-project-follow-cleanup t)
+        treemacs-project-follow-cleanup t
+        ;; Mouse-friendly settings
+        treemacs-doubleclick-to-toggle-node t
+        treemacs-click-will-visit-file t
+        treemacs-migrate-marks-on-rename t)
   (keymap-global-set "C-c t" #'treemacs)
   (keymap-global-set "C-c T" #'treemacs-select-window)
   (with-eval-after-load 'treemacs
     (treemacs-project-follow-mode 1)
     (treemacs-follow-mode 1)
-    (treemacs-filewatch-mode 1)))
+    (treemacs-filewatch-mode 1)
+    ;; Better mouse behavior - single click to open, double to toggle dirs
+    (define-key treemacs-mode-map [mouse-1] #'treemacs-leftclick-action)
+    (define-key treemacs-mode-map [double-mouse-1] #'treemacs-doubleclick-action)))
 
 (elpaca treemacs-projectile
   (with-eval-after-load 'treemacs
     (require 'treemacs-projectile)))
+
+;;; Tree-sitter for modern syntax highlighting
+;; Tell Emacs where grammars are installed
+(setq treesit-extra-load-path
+      (list (expand-file-name "tree-sitter" user-emacs-directory)))
+
+(elpaca treesit-auto
+  (require 'treesit-auto)
+  ;; Auto-use Tree-sitter modes when grammars exist, fallback otherwise
+  (setq treesit-auto-install 'prompt) ; ask before auto-installing grammars
+  (global-treesit-auto-mode 1))
+
+;; Markdown mode (no built-in markdown-ts-mode yet, use traditional mode)
+(elpaca markdown-mode
+  (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+  (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode)))
 
 ;;; Ediff (built-in diff merge tool)
 (my-emacs-configure
