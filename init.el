@@ -279,20 +279,18 @@
   (with-eval-after-load 'treemacs
     (require 'treemacs-projectile)))
 
-(elpaca base16-theme
-  (load-theme 'base16-materia :no-confirm)
-  ;; Darker selection highlight for better visibility
-  (set-face-attribute 'icomplete-selected-match nil :background "#37474F" :weight 'bold)
-  ;; Make active modeline more prominent - brighter background, subtle box
-  (set-face-attribute 'mode-line nil
-                      :background "#4C566A"
-                      :foreground "#E5E9F0"
-                      :box '(:line-width 1 :color "#5E81AC"))
-  ;; Inactive modeline more subdued
-  (set-face-attribute 'mode-line-inactive nil
-                      :background "#2E3440"
-                      :foreground "#70788A"
-                      :box '(:line-width 1 :color "#3B4252")))
+;; Theme: port of my VS Code (Dark 2026 + settings.json customizations).
+;; Flat, minimal — no boxes or extra decoration.
+(my-emacs-configure
+  (add-to-list 'custom-theme-load-path
+               (expand-file-name "themes/" user-emacs-directory))
+  (load-theme 'vscode-dark-2026 :no-confirm))
+
+;; Bracket/paren pair colors, cycling through VS Code's six bracket colors
+;; (defined in the theme).
+(elpaca rainbow-delimiters
+  (setq rainbow-delimiters-max-face-count 6)
+  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
 
 ;;; Tree-sitter for modern syntax highlighting
 ;; Tell Emacs where grammars are installed
@@ -343,6 +341,21 @@
 ;; tree-sitter major mode that uses the grammar in ~/.emacs.d/tree-sitter/.
 (elpaca swift-ts-mode
   (add-to-list 'auto-mode-alist '("\\.swift\\'" . swift-ts-mode)))
+
+;; swift-ts-mode paints @attributes (@Published, @MainActor) with the type
+;; face, which the theme leaves uncolored. Override them to keyword blue,
+;; matching VS Code's storage.modifier color.
+(defun my-swift-ts-blue-attributes ()
+  "Fontify Swift attribute nodes with the keyword face."
+  (setq-local treesit-font-lock-settings
+              (append treesit-font-lock-settings
+                      (treesit-font-lock-rules
+                       :language 'swift
+                       :feature 'keyword
+                       :override t
+                       '((attribute) @font-lock-keyword-face))))
+  (treesit-font-lock-recompute-features))
+(add-hook 'swift-ts-mode-hook #'my-swift-ts-blue-attributes)
 
 ;;; Clojure (daily language): clojure-mode + CIDER REPL + paredit + clj-kondo
 ;; Emacs has no built-in Clojure mode, so we install `clojure-mode' (the
@@ -395,6 +408,17 @@
           ediff-show-clashes-only t)))
 
 ;;; Appearance
+;; Minimal modeline: modified dot and buffer name. Nothing else.
+(setq-default mode-line-format
+              '("  "
+                (:eval (if (buffer-modified-p) "• " "  "))
+                mode-line-buffer-id))
+
+;; Line numbers in the left gutter, like VS Code.
+(setq-default display-line-numbers-width 3)
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+(add-hook 'conf-mode-hook #'display-line-numbers-mode)
+
 (my-emacs-configure
   ;; macOS transparent title bar
   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
