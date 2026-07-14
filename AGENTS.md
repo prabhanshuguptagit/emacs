@@ -79,6 +79,23 @@ section why the package earns its maintenance cost.
 - `C-z` intentionally unset.
 - LSP: `M-.` / `M-,` / `M-?`; CIDER also uses `M-.` (REPL-backed).
 
+## External toolchain (language servers / tools)
+
+Install only for languages used. Emacs finds these on `PATH` automatically.
+
+| Language | Tool | Install |
+|---|---|---|
+| Clojure | `clj-kondo` (linter) | `brew install clj-kondo` |
+| Swift | `sourcekit-lsp` | comes with Xcode Command Line Tools |
+| Rust | `rust-analyzer` | `brew install rust-analyzer` |
+| TS/JS | `typescript-language-server` + `typescript` | `npm i -g typescript typescript-language-server` |
+| HTML/CSS/JSON | `vscode-langservers-extracted` | `npm i -g vscode-langservers-extracted` |
+| C/C++ | `clangd` | already at `/usr/bin/clangd` |
+| any | `ripgrep` (project search) | `brew install ripgrep` |
+
+Servers run as separate OS processes, lazily per language, shut down on last
+buffer close (`eglot-autoshutdown`). Clojure uses CIDER, not a server.
+
 ## Known gotchas
 - **GUI Emacs PATH:** doesn't inherit shell PATH. The nvm bin dir is added
   explicitly and `exec-path-from-shell` copies `FIREWORKS_API_KEY`. If a new
