@@ -1,16 +1,13 @@
 # prabhanshu's emacs
 
-A small Emacs config, small enough to hold in your head and maintain for life.
+Working man's emacs config.
 
 - **Platform:** macOS · **Emacs:** 29+ (developed on 30) · **Packages:** [Elpaca](https://github.com/progfolio/elpaca)
-- **Daily language:** Clojure (via CIDER)
-- **Philosophy:** prefer built-ins, explicit keybindings, one readable `init.el`.
 
 ## Quick start
 
 ```bash
 git clone https://github.com/prabhanshuguptagit/emacs.git ~/.emacs.d
-brew install clj-kondo ripgrep
 ```
 
 Open Emacs. On first launch Elpaca downloads and builds every package (a minute or two, once). Tree-sitter grammars compile automatically the first time you open a file of each language.
