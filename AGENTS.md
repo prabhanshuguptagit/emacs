@@ -97,3 +97,39 @@ rm -rf ~/.emacs.d/.cache/elpaca/builds/<pkg> ~/.emacs.d/.cache/elpaca/sources/<p
 ```
 then restart Emacs. For a full reset: `rm -rf ~/.emacs.d/.cache` (grammars in
 `~/.emacs.d/tree-sitter/` are preserved since they're outside `.cache/`).
+
+## Maintenance recipes (agent reference)
+
+### Add a package
+`(elpaca name ...)` block in the matching `init.el` section, then restart.
+Never rely on `M-x package-install` — it won't survive a clean `.cache/` wipe.
+
+### Add a language
+1. Highlighting: if Emacs has `foo-ts-mode` built in, `treesit-auto` handles
+   it. If not, add a third-party mode from MELPA (e.g. `swift-ts-mode`) and
+   an `auto-mode-alist` entry.
+2. LSP: install the server binary (brew/npm), add an `eglot-server-programs`
+   entry for the mode name.
+3. Clojure: use CIDER, not LSP. Do not reintroduce clojure-lsp.
+4. Linting: prefer `flymake`; only use `flycheck` where a tool's integration
+   requires it (currently clj-kondo for Clojure, scoped to clojure-mode-hook).
+
+### Update everything
+```
+M-x elpaca-update-all
+M-x treesit-auto-install-all   ; refresh grammars
+```
+
+### Debugging
+- Package didn't install → `M-x elpaca-manager`, check build log.
+- No highlighting for language Y → `M-x treesit-ready-p RET Y RET`; nil =
+  grammar didn't build, check `~/.emacs.d/tree-sitter/`.
+- eglot won't connect → `M-: (executable-find "<server>")` must return a
+  path in GUI Emacs. If nil, PATH isn't inherited — extend the nvm PATH line
+  or `exec-path-from-shell`.
+- Slow startup → `.cache/` and `.state/` grow; the `early-init.el` GC trick
+  already speeds cold start; `rm -rf .cache` for a clean rebuild.
+
+### Commit conventions
+One focused commit per change ("Add CIDER for Clojure"). Keep `init.el`
+readable. Keep `README.md` human-short; put agent-only detail here.
