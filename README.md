@@ -1,8 +1,7 @@
-# prabhanshu's emacs
-
-Working man's emacs config.
+## prabhanshu's emacs config
 
 - **Platform:** macOS · **Emacs:** 29+ (developed on 30) · **Packages:** [Elpaca](https://github.com/progfolio/elpaca)
+
 ## Keybindings
 
 | Key | Action |
