@@ -90,8 +90,8 @@
    `(font-lock-warning-face ((t (:foreground ,warn))))
 
    ;; Line numbers (gutter)
-   `(line-number ((t (:foreground ,linenum :background ,bg))))
-   `(line-number-current-line ((t (:foreground ,linenum-a :background ,hlline))))
+   `(line-number ((t (:inherit fixed-pitch :foreground ,linenum :background ,bg :height 0.85))))
+   `(line-number-current-line ((t (:inherit fixed-pitch :foreground ,linenum-a :background ,hlline :height 0.85))))
 
    ;; Mode line — flat, like the VS Code status bar
    `(mode-line ((t (:background ,panel-bg :foreground ,panel-fg :box nil))))
@@ -144,6 +144,12 @@
 
    ;; Markdown / org headings — blue + bold like markup.heading
    `(markdown-header-face ((t (:foreground ,keyword :weight bold))))
+   `(markdown-inline-code-face ((t (:inherit fixed-pitch :foreground ,string))))
+   `(markdown-code-face ((t (:inherit fixed-pitch :foreground ,string))))
+   `(markdown-pre-face ((t (:inherit fixed-pitch :foreground ,string))))
+   `(markdown-language-keyword-face ((t (:inherit fixed-pitch :foreground ,comment))))
+   `(org-code ((t (:inherit fixed-pitch :foreground ,string))))
+   `(org-verbatim ((t (:inherit fixed-pitch :foreground ,string))))
    `(org-level-1 ((t (:foreground ,keyword :weight bold))))
    `(org-level-2 ((t (:foreground ,keyword :weight bold))))
    `(outline-1 ((t (:foreground ,keyword :weight bold))))

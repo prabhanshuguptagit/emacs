@@ -82,7 +82,9 @@
       savehist-file (expand-file-name "savehist" my-emacs-state-directory)
       save-place-file (expand-file-name "saveplace" my-emacs-state-directory)
       initial-buffer-choice t
-      initial-scratch-message nil)
+      initial-scratch-message nil
+      ;; *scratch* starts in org-mode instead of lisp-interaction
+      initial-major-mode 'org-mode)
 
 (setq-default indent-tabs-mode nil
               tab-width 4
@@ -215,7 +217,10 @@
         corfu-preview-current 'insert)
   ;; TAB completes, S-TAB cycles backward, RET accepts.
   (keymap-set corfu-map "RET" #'corfu-send)
-  (keymap-set corfu-map "TAB" #'corfu-insert))
+  (keymap-set corfu-map "TAB" #'corfu-insert)
+  ;; No auto-popup while writing prose (org, markdown, etc.);
+  ;; M-TAB still completes on demand.
+  (add-hook 'text-mode-hook (lambda () (setq-local corfu-auto nil))))
 
 (elpaca cape
   (require 'cape)
@@ -247,12 +252,23 @@
   (setq projectile-known-projects-file (expand-file-name "projectile-bookmarks.eld" my-emacs-state-directory)
         projectile-project-search-path '("~")
         projectile-completion-system 'default
-        projectile-switch-project-action #'projectile-dired
-        ;; Performance: don't index when opening files, cache aggressively
-)
+        ;; After picking a project, go straight to its file list
+        projectile-switch-project-action #'projectile-find-file)
+  ;; Projectile never scans for projects on its own — populate the list by
+  ;; scanning the search path shortly after startup. Visited projects float
+  ;; to the top (MRU), so s-p behaves like autojump: recent first, type to
+  ;; flex-narrow.
+  (run-with-idle-timer 0.5 nil #'projectile-discover-projects-in-search-path)
   (keymap-global-set "C-c p" projectile-command-map)
-  ;; macOS Cmd+P for "Quick Open" style file finding
-  (keymap-global-set "s-p" #'projectile-find-file))
+  ;; macOS Cmd+P: files in current project, or project picker when
+  ;; outside any project (e.g. fresh startup in *scratch*)
+  (defun my-projectile-find-file-dwim ()
+    "Find file in project; if not in a project, pick one first."
+    (interactive)
+    (if (projectile-project-p)
+        (projectile-find-file)
+      (projectile-switch-project)))
+  (keymap-global-set "s-p" #'my-projectile-find-file-dwim))
 
 (elpaca treemacs
   (setq treemacs-persist-file (expand-file-name "treemacs-persist" my-emacs-state-directory)
@@ -318,11 +334,20 @@
 (add-to-list 'exec-path "/Users/prabhanshu/.nvm/versions/node/v25.5.0/bin")
 (setenv "PATH" (concat "/Users/prabhanshu/.nvm/versions/node/v25.5.0/bin:" (getenv "PATH")))
 
-;; Inherit shell environment variables (API keys from zshrc)
-;; Deferred to avoid slowing startup - runs after init is complete
-(elpaca exec-path-from-shell
-  (run-with-idle-timer 0.5 nil (lambda ()
-                                 (exec-path-from-shell-copy-env "FIREWORKS_API_KEY"))))
+;; Inherit shell environment variables (API keys from zshrc).
+;; The shell launch costs ~500ms, so do it once and cache the result;
+;; later startups just load the cache (instant). Delete the cache file
+;; if the key ever changes.
+(defvar my-env-cache-file (expand-file-name "env-cache.el" my-emacs-state-directory))
+(if (file-exists-p my-env-cache-file)
+    (load my-env-cache-file :no-error :no-message)
+  (elpaca exec-path-from-shell
+    (run-with-idle-timer 1 nil
+                         (lambda ()
+                           (exec-path-from-shell-copy-env "FIREWORKS_API_KEY")
+                           (when-let* ((key (getenv "FIREWORKS_API_KEY")))
+                             (with-temp-file my-env-cache-file
+                               (insert (format "(setenv \"FIREWORKS_API_KEY\" %S)\n" key))))))))
 
 (elpaca pi-coding-agent
   ;; Requires the `pi` CLI to be installed:
@@ -414,10 +439,13 @@
                 (:eval (if (buffer-modified-p) "• " "  "))
                 mode-line-buffer-id))
 
-;; Line numbers in the left gutter, like VS Code.
+;; Line numbers in the left gutter, like VS Code — always on, everywhere,
+;; except UI buffers where they're noise.
 (setq-default display-line-numbers-width 3)
-(add-hook 'prog-mode-hook #'display-line-numbers-mode)
-(add-hook 'conf-mode-hook #'display-line-numbers-mode)
+(global-display-line-numbers-mode 1)
+(dolist (hook '(treemacs-mode-hook dired-mode-hook magit-mode-hook
+                help-mode-hook messages-buffer-mode-hook))
+  (add-hook hook (lambda () (display-line-numbers-mode -1))))
 
 (my-emacs-configure
   ;; macOS transparent title bar
