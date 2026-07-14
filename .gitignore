@@ -24,6 +24,7 @@
 /projects
 /cursory-latest-state.eld
 /org-clock-save.el
+/transient/
 
 # OS files
 .DS_Store

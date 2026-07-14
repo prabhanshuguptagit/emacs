@@ -167,6 +167,67 @@
 
 ;;; Packages you asked for
 
+;;; LSP via eglot (built into Emacs 30) + in-buffer completion (corfu/cape)
+;; eglot connects to a per-language "language server" and provides:
+;;   jump-to-definition  (M-.)
+;;   find-references     (M-?)
+;;   pop back            (M-,)
+;;   rename symbol       (M-x eglot-rename)
+;;   diagnostics         (flymake, shown in mode line + M-x flymake-show-buffer-diagnostics)
+;;   completion-at-point (TAB / corfu popup)
+;;
+;; Start it automatically when opening a file in a language that has a server.
+;; Silence the noisy "Connected" / "Disconnected" echoes.
+(my-emacs-configure
+  (setq eglot-autoshutdown t            ; stop server when last buffer closes
+        eglot-events-buffer-size 0      ; no *eglot events* log spam
+        ;; Send sync with the editor (completion etc.)
+        eglot-send-changes-idle-time 0.3)
+  ;; Tell eglot which server to launch for the tree-sitter (-ts-) major modes,
+  ;; since eglot's defaults key off the classic (non-ts) mode names.
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+                 '((swift-ts-mode :language-id "swift") .
+                   ("sourcekit-lsp")))
+    (add-to-list 'eglot-server-programs
+                 '((rust-ts-mode) . ("rust-analyzer")))
+    (add-to-list 'eglot-server-programs
+                 '((tsx-ts-mode typescript-ts-mode js-ts-mode js2-ts-mode)
+                   . ("typescript-language-server" "--stdio")))
+    (add-to-list 'eglot-server-programs
+                 '((html-ts-mode) . ("vscode-html-language-server" "--stdio")))
+    (add-to-list 'eglot-server-programs
+                 '((css-ts-mode) . ("vscode-css-language-server" "--stdio"))))
+  ;; Bind eglot's events so they don't echo in the echo area.
+  (fset 'eglot--message #'message)
+  ;; Auto-start eglot in prog modes (it no-ops if no server is configured).
+  (add-hook 'prog-mode-hook #'eglot-ensure))
+
+;; Corfu: completion popup at point. Cape: completion backends/adapters
+;; (e.g. `cape-file' so you get path completion too).
+(elpaca corfu
+  (global-corfu-mode 1)
+  (setq corfu-auto t                 ; popup as you type
+        corfu-auto-delay 0.15
+        corfu-auto-prefix 2
+        corfu-cycle t                 ; TAB cycles candidates
+        corfu-quit-no-match 'separator
+        corfu-preview-current 'insert)
+  ;; TAB completes, S-TAB cycles backward, RET accepts.
+  (keymap-set corfu-map "RET" #'corfu-send)
+  (keymap-set corfu-map "TAB" #'corfu-insert))
+
+(elpaca cape
+  (require 'cape)
+  ;; Merge LSP (eglot) + file + dabbrev completions.
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev))
+
+;; Built-in Flymake for diagnostics (eglot feeds it). Nice UI in the mode line.
+(my-emacs-configure
+  (setq eldoc-echo-area-use-multiline-p 3)
+  (add-hook 'eglot-managed-mode-hook #'flymake-mode))
+
 ;; Magit's current dependency chain wants a newer `compat' than the one
 ;; bundled with Emacs 30.  Install it explicitly before Magit so Elpaca
 ;; does not try to satisfy the dependency with the built-in copy.
@@ -238,10 +299,20 @@
 (setq treesit-extra-load-path
       (list (expand-file-name "tree-sitter" user-emacs-directory)))
 
+;; Enable font-lock everywhere and crank it to maximum decoration.
+;; This covers both classic regex-based major modes and tree-sitter modes.
+(setq font-lock-maximum-decoration t)
+(global-font-lock-mode 1)
+
 (elpaca treesit-auto
   (require 'treesit-auto)
-  ;; Auto-use Tree-sitter modes when grammars exist, fallback otherwise
-  (setq treesit-auto-install 'prompt) ; ask before auto-installing grammars
+  ;; Auto-use Tree-sitter modes when grammars exist, fallback otherwise.
+  ;; Install missing grammars automatically (no prompt) so every language
+  ;; gets tree-sitter highlighting the first time you open a file.
+  (setq treesit-auto-install t)
+  ;; Maximum tree-sitter fontification: operators, delimiters, all
+  ;; functions/variables/properties, not just keywords and strings.
+  (setq treesit-font-lock-level 4)
   (global-treesit-auto-mode 1))
 
 ;; pi-coding-agent - Emacs frontend for the pi coding agent
@@ -267,6 +338,49 @@
 (elpaca markdown-mode
   (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
   (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode)))
+
+;; Swift: Emacs has no built-in Swift mode.  `swift-ts-mode' provides a
+;; tree-sitter major mode that uses the grammar in ~/.emacs.d/tree-sitter/.
+(elpaca swift-ts-mode
+  (add-to-list 'auto-mode-alist '("\\.swift\\'" . swift-ts-mode)))
+
+;;; Clojure (daily language): clojure-mode + CIDER REPL + paredit + clj-kondo
+;; Emacs has no built-in Clojure mode, so we install `clojure-mode' (the
+;; battle-tested regex major mode, used by every serious Clojure setup).
+;; CIDER gives an interactive nREPL: eval forms, jump to definitions,
+;; inspect docs, debug.  Paredit gives structured editing of parentheses.
+;; clj-kondo is the standard Clojure linter (requires the `clj-kondo' CLI).
+(elpaca clojure-mode
+  (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
+  (add-to-list 'auto-mode-alist '("\\.cljs\\'" . clojure-mode))
+  (add-to-list 'auto-mode-alist '("\\.cljc\\'" . clojure-mode))
+  (add-to-list 'auto-mode-alist '("\\.cljd\\'" . clojure-mode))
+  (add-to-list 'auto-mode-alist '("\\.edn\\'" . clojure-mode)))
+
+(elpaca cider
+  (with-eval-after-load 'cider
+    (setq cider-repl-display-in-current-window t
+          cider-repl-use-pretty-printing t
+          cider-font-lock-dynamically t ; highlight symbols from the REPL
+          cider-save-file-on-load        'always
+          cider-print-fn                 'fipp)))
+
+;; Paredit: structured paren editing for Lisps.
+(elpaca paredit
+  (dolist (hook '(clojure-mode-hook
+                  emacs-lisp-mode-hook
+                  lisp-mode-hook
+                  lisp-interaction-mode-hook))
+    (add-hook hook #'enable-paredit-mode)))
+
+;; clj-kondo linting in Clojure buffers (requires `brew install clj-kondo').
+;; We use flycheck ONLY for Clojure; other languages stay on flymake via eglot.
+(elpaca flycheck
+  (with-eval-after-load 'flycheck
+    (require 'flycheck-clj-kondo)
+    (add-to-list 'flycheck-checkers 'clojure-joker-kondo)))
+(elpaca flycheck-clj-kondo)
+(add-hook 'clojure-mode-hook #'flycheck-mode)
 
 ;;; Ediff (built-in diff merge tool)
 (my-emacs-configure
