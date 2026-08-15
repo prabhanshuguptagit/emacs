@@ -465,5 +465,13 @@
   (when (display-graphic-p)
     (set-frame-font "Be Vietnam Pro-16" nil t)))
 
+;; winner-mode: C-c <left>/<right> to undo/redo window configuration changes
+(winner-mode 1)
+
+;; install undo-fu (equivalent to use-package + MELPA via elpaca)
+(elpaca undo-fu
+  (global-set-key (kbd "s-z") #'undo-fu-only-undo)
+  (global-set-key (kbd "s-Z") #'undo-fu-only-redo))
+
 (provide 'init)
 ;;; init.el ends here
